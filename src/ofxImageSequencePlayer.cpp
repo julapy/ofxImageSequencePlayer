@@ -14,6 +14,10 @@ ofxImageSequencePlayer::~ofxImageSequencePlayer() {
     close();
 }
 
+void ofxImageSequencePlayer::setFrameRate(float value) {
+    fps = value;
+}
+
 bool ofxImageSequencePlayer::loadMovie(string name) {
     close();
     
@@ -62,6 +66,7 @@ bool ofxImageSequencePlayer::loadMovie(string name) {
 }
 
 void ofxImageSequencePlayer::close() {
+    fps = 30;
     bLoaded = false;
     bPlaying = false;
     bPaused = false;

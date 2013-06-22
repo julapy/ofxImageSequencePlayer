@@ -15,6 +15,10 @@ public:
     ofxImageSequencePlayer();
     ~ofxImageSequencePlayer();
     
+    //-------------------------------------- ofxImageSequencePlayer methods.
+    void setFrameRate(float value);
+    
+    //-------------------------------------- ofBaseVideoPlayer methods.
     bool loadMovie(string name);
     void close();
     void update();
@@ -67,6 +71,7 @@ protected:
     bool bPaused;
     bool bNewFrame;
     
+    float fps;
     int frameIndex;
     int frameLastIndex;
     int framesTotal;
