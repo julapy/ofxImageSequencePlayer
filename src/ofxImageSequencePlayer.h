@@ -51,7 +51,7 @@ public:
 	
     int	getCurrentFrame();
     int	getTotalNumFrames();
-    ofLoopType	getLoopState();
+    ofLoopType getLoopState();
 	
     void firstFrame();
     void nextFrame();
@@ -65,8 +65,10 @@ protected:
     bool bLoaded;
     bool bPlaying;
     bool bPaused;
+    bool bNewFrame;
     
     int frameIndex;
+    int frameLastIndex;
     int framesTotal;
     float position;
     float speed;

@@ -35,15 +35,28 @@ bool ofxImageSequencePlayer::loadMovie(string name) {
     
     ofImage imageLoader;
     for(int i=0; i<imageSequencePaths.size(); i++) {
-        imageLoader.loadImage(imageSequencePaths[i]);
+        bool bLoaded = imageLoader.loadImage(imageSequencePaths[i]);
+        if(bLoaded == false) {
+            continue;
+        }
 
         ofTexture * texture = new ofTexture();
+        texture->allocate(imageLoader.getPixelsRef());
         texture->loadData(imageLoader.getPixelsRef());
         imageSequenceTextures.push_back(texture);
+        
+        imageLoader.clear();
+    }
+    
+    bLoaded = imageSequenceTextures.size() > 0;
+    if(bLoaded == false) {
+        return false;
     }
     
     frameIndex = 0;
     framesTotal = imageSequenceTextures.size();
+    frameLastIndex = framesTotal - 1;
+    bNewFrame = true;
     
     return bLoaded;
 }
@@ -52,7 +65,9 @@ void ofxImageSequencePlayer::close() {
     bLoaded = false;
     bPlaying = false;
     bPaused = false;
+    bNewFrame = false;
     frameIndex = 0;
+    frameLastIndex = 0;
     framesTotal = 0;
     position = 0;
     speed = 1;
@@ -69,10 +84,16 @@ void ofxImageSequencePlayer::close() {
 }
 
 void ofxImageSequencePlayer::update() {
+    bNewFrame = false;
+    
     if(isLoaded() == false) {
         return;
     }
 
+    if(isPlaying() == false) {
+        return;
+    }
+    
     nextFrame();
 }
 
@@ -99,6 +120,10 @@ void ofxImageSequencePlayer::play() {
         return;
     }
 
+    if(getIsMovieDone()) {
+        setFrame(0);
+    }
+    
     bPlaying = true;
     bPaused = false;
 }
@@ -117,8 +142,7 @@ bool ofxImageSequencePlayer::isFrameNew() {
         return false;
     }
     
-    // TODO.
-    return false;
+    return bNewFrame;
 }
 
 unsigned char * ofxImageSequencePlayer::getPixels() {
@@ -131,12 +155,8 @@ unsigned char * ofxImageSequencePlayer::getPixels() {
 }
 
 ofPixelsRef	ofxImageSequencePlayer::getPixelsRef() {
-    if(isLoaded() == false) {
-        return NULL;
-    }
-
-    // TODO.
-    return NULL;
+    static ofPixels dummy;
+    return dummy;
 }
 
 ofTexture * ofxImageSequencePlayer::getTexture() {
@@ -144,7 +164,7 @@ ofTexture * ofxImageSequencePlayer::getTexture() {
         return NULL;
     }
     
-    ofTexture * texture = imageSequenceTextures[frameIndex];
+    ofTexture * texture = imageSequenceTextures[getCurrentFrame()];
     return texture;
 }
 
@@ -191,8 +211,8 @@ float ofxImageSequencePlayer::getDuration() {
 }
 
 bool ofxImageSequencePlayer::getIsMovieDone() {
-    // TODO
-    return false;
+    bool bFinished = (bPlaying == false) && (getCurrentFrame() == frameLastIndex);
+    return bFinished;
 }
 
 void ofxImageSequencePlayer::setPaused(bool bPause) {
@@ -200,8 +220,8 @@ void ofxImageSequencePlayer::setPaused(bool bPause) {
 }
 
 void ofxImageSequencePlayer::setPosition(float value) {
-    position = value;
-    frameIndex = position * (framesTotal - 1);
+    int index = value * frameLastIndex;
+    setFrame(index);
 }
 
 void ofxImageSequencePlayer::setVolume(float volume) {
@@ -221,7 +241,14 @@ void ofxImageSequencePlayer::setFrame(int value) {
         return;
     }
     
-    frameIndex = ofClamp(value, 0, framesTotal-1);
+    int index = ofClamp(value, 0, frameLastIndex);
+    if(frameIndex == index) {
+        return;
+    }
+    frameIndex = index;
+    bNewFrame = true;
+    
+    position = frameIndex / (float)frameLastIndex;
 }
 
 int	ofxImageSequencePlayer::getCurrentFrame() {
@@ -237,7 +264,7 @@ ofLoopType ofxImageSequencePlayer::getLoopState() {
 }
 
 void ofxImageSequencePlayer::firstFrame() {
-    frameIndex = 0;
+    setFrame(0);
 }
 
 void ofxImageSequencePlayer::nextFrame() {
@@ -245,25 +272,38 @@ void ofxImageSequencePlayer::nextFrame() {
         return;
     }
 
-    if(++frameIndex > framesTotal - 1) {
+    int index = getCurrentFrame() + 1;
+    if(index > frameLastIndex) {
         if(loopType == OF_LOOP_NONE) {
-            frameIndex = framesTotal - 1;
+            index = frameLastIndex;
+            if(isPlaying()) {
+                stop();
+            }
         } else if(loopType == OF_LOOP_NORMAL) {
-            frameIndex = 0;
+            index = 0;
         } else if(loopType == OF_LOOP_PALINDROME) {
             // TODO.
         }
     }
+    
+    setFrame(index);
 }
 
 void ofxImageSequencePlayer::previousFrame() {
-    if(--frameIndex < 0) {
+    if(isLoaded() == false) {
+        return;
+    }
+    
+    int index = getCurrentFrame() - 1;
+    if(index < 0) {
         if(loopType == OF_LOOP_NONE) {
-            frameIndex = 0;
+            index = 0;
         } else if(loopType == OF_LOOP_NORMAL) {
-            frameIndex = framesTotal - 1;
+            index = frameLastIndex;
         } else if(loopType == OF_LOOP_PALINDROME) {
             // TODO.
         }
     }
+    
+    setFrame(index);
 }
