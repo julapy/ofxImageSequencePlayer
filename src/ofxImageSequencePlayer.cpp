@@ -7,7 +7,21 @@
 #include "ofxImageSequencePlayer.h"
 
 ofxImageSequencePlayer::ofxImageSequencePlayer() {
-    close();
+    bLoaded = false;
+    bPlaying = false;
+    bPaused = false;
+    bNewFrame = false;
+    
+    frameIndex = 0;
+    frameLastIndex = 0;
+    framesTotal = 0;
+    position = 0;
+    duration = 0;
+    time = 0;
+    
+    fps = 30;
+    speed = 1;
+    loopType = OF_LOOP_NONE;
 }
 
 ofxImageSequencePlayer::~ofxImageSequencePlayer() {
@@ -60,24 +74,26 @@ bool ofxImageSequencePlayer::loadMovie(string name) {
     frameIndex = 0;
     framesTotal = imageSequenceTextures.size();
     frameLastIndex = framesTotal - 1;
+    
+    duration = framesTotal / fps;
+    
     bNewFrame = true;
     
     return bLoaded;
 }
 
 void ofxImageSequencePlayer::close() {
-    fps = 30;
     bLoaded = false;
     bPlaying = false;
     bPaused = false;
     bNewFrame = false;
+    
     frameIndex = 0;
     frameLastIndex = 0;
     framesTotal = 0;
     position = 0;
-    speed = 1;
     duration = 0;
-    loopType = OF_LOOP_NONE;
+    time = 0;
     
     imageSequencePaths.clear();
     
@@ -91,15 +107,22 @@ void ofxImageSequencePlayer::close() {
 void ofxImageSequencePlayer::update() {
     bNewFrame = false;
     
-    if(isLoaded() == false) {
-        return;
-    }
-
-    if(isPlaying() == false) {
+    bool bUpdate = true;
+    bUpdate = bUpdate && (isLoaded() == true);
+    bUpdate = bUpdate && (isPlaying() == true);
+    bUpdate = bUpdate && (isPaused() == false);
+    
+    if(bUpdate == false) {
         return;
     }
     
-    nextFrame();
+    // not sure adding the last frame duration is the most accurate approach here.
+    // might need to rethink this.
+    
+    time += ofGetLastFrameTime();
+    float p = ofMap(time, 0.0, duration, 0.0, 1.0, true);
+    
+    setPosition(p);
 }
 
 bool ofxImageSequencePlayer::setPixelFormat(ofPixelFormat pixelFormat) {
@@ -140,6 +163,9 @@ void ofxImageSequencePlayer::stop() {
     
     bPlaying = false;
     bPaused = false;
+
+    time = 0;
+    setPosition(0);
 }
 
 bool ofxImageSequencePlayer::isFrameNew() {

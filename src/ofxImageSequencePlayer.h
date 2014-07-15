@@ -71,12 +71,14 @@ protected:
     bool bPaused;
     bool bNewFrame;
     
-    float fps;
     int frameIndex;
     int frameLastIndex;
     int framesTotal;
     float position;
-    float speed;
     float duration;
+    float time;
+    
+    float fps;
+    float speed;
     ofLoopType loopType;
 };
