@@ -51,19 +51,25 @@ bool ofxImageSequencePlayer::loadMovie(string name) {
         return false;
     }
     
-    ofImage imageLoader;
-    for(int i=0; i<imageSequencePaths.size(); i++) {
-        bool bLoaded = imageLoader.loadImage(imageSequencePaths[i]);
+    bLoaded = loadMovie(imageSequencePaths);
+    
+    return bLoaded;
+}
+
+bool ofxImageSequencePlayer::loadMovie(const vector<string> & imagePaths) {
+
+    for(int i=0; i<imagePaths.size(); i++) {
+        string imagePath = imagePaths[i];
+        ofTexture * imageTexture = new ofTexture();
+        bool bLoaded = ofLoadImage(*imageTexture, imagePath);
         if(bLoaded == false) {
+            ofLog(OF_LOG_ERROR, "ofxImageSequencePlayer::loadMovie, could not load : " + imagePath);
+            delete imageTexture;
+            imageTexture = NULL;
             continue;
         }
-
-        ofTexture * texture = new ofTexture();
-        texture->allocate(imageLoader.getPixelsRef());
-        texture->loadData(imageLoader.getPixelsRef());
-        imageSequenceTextures.push_back(texture);
         
-        imageLoader.clear();
+        imageSequenceTextures.push_back(imageTexture);
     }
     
     bLoaded = imageSequenceTextures.size() > 0;

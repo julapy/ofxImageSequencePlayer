@@ -15,11 +15,10 @@ public:
     ofxImageSequencePlayer();
     ~ofxImageSequencePlayer();
     
-    //-------------------------------------- ofxImageSequencePlayer methods.
     void setFrameRate(float value);
     
-    //-------------------------------------- ofBaseVideoPlayer methods.
     bool loadMovie(string name);
+    bool loadMovie(const vector<string> & imagePaths);
     void close();
     void update();
 	
